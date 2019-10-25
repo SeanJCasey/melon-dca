@@ -72,3 +72,23 @@ There are a few possible solutions to this:
   2. Implement the DCA order book as a contract, have the DCAAdapter inheret from it, and do the swaps via the KyberAdapter (or as new Uniswap adapter).
 
   3. (hacky solution purely for this exercise) Pretend that VS invocation of Uniswap methods custodies and accounts for the funds of its order owners. Even if we did this, the Adapter would still need to have a function to withdraw its swapped tokens, which would need to be triggered somehow... so it's still not a great solution as it leaves these funds outside of the custody of the Fund, which I imagine is a no-no for custody.
+
+### Oct 24
+
+- I decided to approach this with solution 1 above: create a `DCAOrderBook` that is inherited by the `DCAAdapter`.
+
+- I initially approached a DCA order as a `takeOrder`, with the logic that each individual batch is actually a market order (i.e., a "taker" order in the eyes of an exchange).
+
+- After writing out most of the code for this implementation, the Avantgarde team and I realized two critical factors:
+
+  1. DCA orders should actually be made via `makeOrder`, because it involves non-instantaneous settlement. This makes sense because technically, it is "making" an order in the DCA order book.
+
+  2. (much more servere to the architecture) DCA orderbook storage cannot be on the Adapter itself. The adapter is a single deployed contracts that functions as a library for Funds to call via a `delegatecall`. Since this is the case, any kind of storage done via the call would be attempted at the parallel storage slot of the calling contract. TL;DR - this isn't going to work as an inherited contract
+
+- Despite this realization, we decided that I could continue down this path an implement the `DCAOrderBook` as an inherited contract on `DCAAdapter` for the purposes of this exercise.
+
+
+### Oct 25
+
+- I woke up inspired, and decided to re-write the `DCAOrderBook` into its own externally invoked contract, with the batch exectution logic happening on the `DCAAdapter`. See full solution above.
+
