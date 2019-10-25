@@ -1,0 +1,7 @@
+# Ignore system and dev files
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+build/
+unused/
